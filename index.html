@@ -5,489 +5,1007 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Public APIs Search</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+        :root {
+            --primary: #667eea;
+            --primary-dark: #764ba2;
+            --body-bg-start: #667eea;
+            --body-bg-end: #764ba2;
+            --card-bg: #ffffff;
+            --card-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            --text-primary: #333;
+            --text-secondary: #666;
+            --text-muted: #999;
+            --border: #e0e0e0;
+            --panel-bg: #ffffff;
+            --input-bg: #ffffff;
+            --tag-bg: #f5f5f5;
+            --badge-cat-bg: #e3f2fd; --badge-cat-color: #1976d2;
+            --badge-auth-bg: #fff3e0; --badge-auth-color: #f57c00;
+            --badge-https-bg: #e8f5e9; --badge-https-color: #388e3c;
+            --badge-cors-bg: #f3e5f5; --badge-cors-color: #7b1fa2;
+            --fav-color: #ddd;
+            --fav-active: #f59e0b;
+            --stat-glass: rgba(255,255,255,0.18);
         }
+
+        [data-theme="dark"] {
+            --primary: #818cf8;
+            --primary-dark: #6366f1;
+            --body-bg-start: #1e1b4b;
+            --body-bg-end: #312e81;
+            --card-bg: #1e1e2e;
+            --card-shadow: 0 4px 20px rgba(0,0,0,0.4);
+            --text-primary: #e2e8f0;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --border: #334155;
+            --panel-bg: #1e1e2e;
+            --input-bg: #0f172a;
+            --tag-bg: #334155;
+            --badge-cat-bg: #1e3a5f; --badge-cat-color: #60a5fa;
+            --badge-auth-bg: #3d2c1e; --badge-auth-color: #fb923c;
+            --badge-https-bg: #1a2e1a; --badge-https-color: #4ade80;
+            --badge-cors-bg: #2d1f3d; --badge-cors-color: #c084fc;
+            --fav-color: #4a5568;
+            --fav-active: #f59e0b;
+            --stat-glass: rgba(255,255,255,0.08);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, sans-serif;
+            background: linear-gradient(135deg, var(--body-bg-start) 0%, var(--body-bg-end) 100%);
             min-height: 100vh;
             padding: 20px;
+            transition: background 0.4s;
         }
 
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-        }
+        .container { max-width: 1200px; margin: 0 auto; }
 
+        /* ── Header ── */
         header {
             text-align: center;
-            margin-bottom: 40px;
+            margin-bottom: 28px;
             color: white;
+            position: relative;
         }
 
         h1 {
             font-size: 2.5em;
-            margin-bottom: 10px;
+            margin-bottom: 8px;
             text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
         }
 
-        .subtitle {
-            font-size: 1.1em;
-            opacity: 0.9;
+        .subtitle { font-size: 1.05em; opacity: 0.88; }
+
+        .header-btn {
+            position: absolute;
+            top: 0;
+            right: 0;
+            background: rgba(255,255,255,0.2);
+            border: 1px solid rgba(255,255,255,0.3);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.88em;
+            transition: background 0.2s;
+            backdrop-filter: blur(8px);
         }
 
-        .search-container {
-            background: white;
+        .header-btn:hover { background: rgba(255,255,255,0.32); }
+
+        /* ── Stats bar ── */
+        .stats-bar {
+            display: flex;
+            gap: 14px;
+            flex-wrap: wrap;
+            margin-bottom: 22px;
+        }
+
+        .stat-card {
+            background: var(--stat-glass);
+            color: white;
+            padding: 14px 20px;
             border-radius: 12px;
-            padding: 30px;
-            margin-bottom: 30px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            flex: 1;
+            min-width: 120px;
+            text-align: center;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.15);
+        }
+
+        .stat-value {
+            font-size: 1.9em;
+            font-weight: 700;
+            display: block;
+            line-height: 1.1;
+        }
+
+        .stat-label { font-size: 0.78em; opacity: 0.82; margin-top: 2px; display: block; }
+
+        /* ── Search container ── */
+        .search-container {
+            background: var(--panel-bg);
+            border-radius: 14px;
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.18);
+            transition: background 0.4s;
         }
 
         .search-box {
             display: flex;
             gap: 10px;
-            margin-bottom: 20px;
+            margin-bottom: 14px;
             flex-wrap: wrap;
         }
 
         .search-input {
             flex: 1;
             min-width: 250px;
-            padding: 12px 16px;
-            border: 2px solid #e0e0e0;
+            padding: 11px 16px;
+            border: 2px solid var(--border);
             border-radius: 8px;
             font-size: 1em;
-            transition: border-color 0.3s;
+            background: var(--input-bg);
+            color: var(--text-primary);
+            transition: border-color 0.2s, background 0.4s, color 0.4s;
         }
 
-        .search-input:focus {
-            outline: none;
-            border-color: #667eea;
-        }
-
-        .search-input::placeholder {
-            color: #999;
-        }
+        .search-input:focus { outline: none; border-color: var(--primary); }
+        .search-input::placeholder { color: var(--text-muted); }
 
         .filter-group {
             display: flex;
             gap: 10px;
             flex-wrap: wrap;
+            align-items: center;
         }
 
         select {
-            padding: 10px 14px;
-            border: 2px solid #e0e0e0;
+            padding: 10px 13px;
+            border: 2px solid var(--border);
             border-radius: 8px;
-            font-size: 0.95em;
+            font-size: 0.88em;
             cursor: pointer;
-            transition: border-color 0.3s;
-            background: white;
+            background: var(--input-bg);
+            color: var(--text-primary);
+            transition: border-color 0.2s, background 0.4s, color 0.4s;
         }
 
-        select:focus {
-            outline: none;
-            border-color: #667eea;
+        select:focus { outline: none; border-color: var(--primary); }
+
+        .btn {
+            padding: 10px 16px;
+            border-radius: 8px;
+            font-size: 0.88em;
+            cursor: pointer;
+            border: 2px solid var(--primary);
+            transition: background 0.2s, color 0.2s, opacity 0.2s;
+            font-weight: 500;
         }
 
-        .stats {
-            font-size: 0.9em;
-            color: #666;
-            margin-top: 15px;
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-primary:hover { opacity: 0.88; }
+
+        .btn-outline {
+            background: transparent;
+            color: var(--primary);
         }
 
+        .btn-outline:hover { background: var(--primary); color: white; }
+
+        .btn-sm { padding: 7px 12px; font-size: 0.82em; }
+
+        .btn-fav {
+            background: transparent;
+            color: var(--text-secondary);
+            border-color: var(--border);
+        }
+
+        .btn-fav.active {
+            background: #fef3c7;
+            color: #92400e;
+            border-color: #f59e0b;
+        }
+
+        [data-theme="dark"] .btn-fav.active {
+            background: #3d2c00;
+            color: #fbbf24;
+            border-color: #f59e0b;
+        }
+
+        .action-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 14px;
+        }
+
+        .stats-text {
+            font-size: 0.88em;
+            color: var(--text-secondary);
+        }
+
+        .cache-badge {
+            display: inline-block;
+            background: var(--tag-bg);
+            color: var(--text-muted);
+            font-size: 0.78em;
+            padding: 2px 7px;
+            border-radius: 10px;
+            margin-left: 6px;
+        }
+
+        .action-buttons { display: flex; gap: 8px; flex-wrap: wrap; }
+
+        /* ── Category cloud ── */
+        .categories-section {
+            margin-top: 16px;
+            border-top: 1px solid var(--border);
+            padding-top: 14px;
+        }
+
+        .categories-title {
+            font-size: 0.78em;
+            color: var(--text-muted);
+            margin-bottom: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+        }
+
+        .categories-list { display: flex; gap: 7px; flex-wrap: wrap; }
+
+        .category-tag {
+            background: var(--tag-bg);
+            color: var(--text-secondary);
+            padding: 5px 11px;
+            border-radius: 16px;
+            font-size: 0.8em;
+            cursor: pointer;
+            transition: background 0.2s, color 0.2s;
+            border: 1px solid transparent;
+            user-select: none;
+            line-height: 1.4;
+        }
+
+        .category-tag:hover { background: var(--primary); color: white; }
+        .category-tag.active { background: var(--primary); color: white; font-weight: 600; }
+        .category-tag .count { opacity: 0.72; font-size: 0.88em; }
+
+        /* ── Cards ── */
         .results-container {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
-            gap: 20px;
+            gap: 18px;
             margin-bottom: 30px;
         }
 
         .api-card {
-            background: white;
+            background: var(--card-bg);
             border-radius: 12px;
             padding: 20px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-            transition: transform 0.3s, box-shadow 0.3s;
-            cursor: pointer;
+            box-shadow: var(--card-shadow);
+            transition: transform 0.2s, box-shadow 0.2s, background 0.4s;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
         }
 
         .api-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+            transform: translateY(-4px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.18);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 8px;
         }
 
         .api-name {
-            font-size: 1.2em;
+            font-size: 1.08em;
             font-weight: 600;
-            margin-bottom: 10px;
-            color: #333;
+            color: var(--text-primary);
+            flex: 1;
+            transition: color 0.4s;
         }
+
+        .fav-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 1.3em;
+            color: var(--fav-color);
+            padding: 0;
+            line-height: 1;
+            transition: color 0.2s, transform 0.15s;
+            flex-shrink: 0;
+        }
+
+        .fav-btn:hover { transform: scale(1.25); }
+        .fav-btn.active { color: var(--fav-active); }
 
         .api-description {
-            font-size: 0.95em;
-            color: #666;
-            margin-bottom: 12px;
-            line-height: 1.4;
+            font-size: 0.9em;
+            color: var(--text-secondary);
+            line-height: 1.5;
+            transition: color 0.4s;
         }
 
-        .api-meta {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-            margin-bottom: 12px;
-        }
+        .api-meta { display: flex; gap: 6px; flex-wrap: wrap; }
 
         .badge {
             display: inline-block;
-            padding: 4px 10px;
+            padding: 3px 9px;
             border-radius: 20px;
-            font-size: 0.8em;
+            font-size: 0.75em;
             font-weight: 500;
         }
 
-        .badge-category {
-            background: #e3f2fd;
-            color: #1976d2;
-        }
-
-        .badge-auth {
-            background: #fff3e0;
-            color: #f57c00;
-        }
-
-        .badge-https {
-            background: #e8f5e9;
-            color: #388e3c;
-        }
+        .badge-category { background: var(--badge-cat-bg); color: var(--badge-cat-color); }
+        .badge-auth     { background: var(--badge-auth-bg); color: var(--badge-auth-color); }
+        .badge-https    { background: var(--badge-https-bg); color: var(--badge-https-color); }
+        .badge-cors     { background: var(--badge-cors-bg); color: var(--badge-cors-color); }
 
         .api-link {
-            color: #667eea;
+            color: var(--primary);
             text-decoration: none;
-            font-size: 0.9em;
+            font-size: 0.84em;
             word-break: break-all;
+            margin-top: auto;
         }
 
-        .api-link:hover {
-            text-decoration: underline;
-        }
+        .api-link:hover { text-decoration: underline; }
 
+        /* ── States ── */
         .no-results {
             text-align: center;
-            padding: 40px;
-            background: white;
+            padding: 60px 20px;
+            background: var(--card-bg);
             border-radius: 12px;
-            color: #999;
+            color: var(--text-muted);
+            grid-column: 1 / -1;
+            transition: background 0.4s;
         }
+
+        .no-results .emoji { font-size: 2.8em; display: block; margin-bottom: 12px; }
 
         .loading {
             text-align: center;
-            padding: 40px;
+            padding: 60px;
             color: white;
-            font-size: 1.2em;
+            font-size: 1.15em;
         }
 
-        .error {
-            background: white;
-            padding: 20px;
+        .spinner {
+            width: 44px;
+            height: 44px;
+            border: 4px solid rgba(255,255,255,0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.75s linear infinite;
+            margin: 0 auto 16px;
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .error-box {
+            background: var(--card-bg);
+            padding: 18px 22px;
             border-radius: 12px;
-            color: #d32f2f;
+            color: #ef4444;
             margin-bottom: 20px;
-        }
-
-        .categories-list {
+            border-left: 4px solid #ef4444;
             display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
-            margin-bottom: 15px;
+            align-items: flex-start;
+            gap: 10px;
+            transition: background 0.4s;
         }
 
-        .category-tag {
-            background: #f5f5f5;
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-size: 0.85em;
-            cursor: pointer;
-            transition: background 0.3s, color 0.3s;
-            border: 1px solid transparent;
-        }
-
-        .category-tag:hover {
-            background: #667eea;
+        /* ── Toast ── */
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            background: #1e1e2e;
             color: white;
+            padding: 12px 20px;
+            border-radius: 10px;
+            font-size: 0.88em;
+            opacity: 0;
+            transform: translateY(12px);
+            transition: opacity 0.3s, transform 0.3s;
+            z-index: 1000;
+            max-width: 320px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.35);
+            pointer-events: none;
         }
 
-        .category-tag.active {
-            background: #667eea;
-            color: white;
+        .toast.show { opacity: 1; transform: translateY(0); }
+
+        /* ── Footer ── */
+        footer {
+            text-align: center;
+            color: rgba(255,255,255,0.55);
+            font-size: 0.83em;
+            padding: 18px 0 8px;
         }
 
+        footer a { color: rgba(255,255,255,0.78); text-decoration: none; }
+        footer a:hover { text-decoration: underline; }
+
+        /* ── Responsive ── */
         @media (max-width: 768px) {
-            h1 {
-                font-size: 1.8em;
-            }
-
-            .results-container {
-                grid-template-columns: 1fr;
-            }
-
-            .search-box {
-                flex-direction: column;
-            }
-
-            .search-input {
-                min-width: auto;
-            }
+            h1 { font-size: 1.85em; }
+            .header-btn { position: static; margin-top: 14px; }
+            header { padding-bottom: 4px; }
+            .results-container { grid-template-columns: 1fr; }
+            .search-input { min-width: auto; }
+            .stat-card { min-width: calc(50% - 7px); }
+            .action-row { flex-direction: column; align-items: flex-start; }
         }
     </style>
 </head>
 <body>
     <div class="container">
         <header>
+            <button class="header-btn" id="darkModeBtn">🌙 Dark Mode</button>
             <h1>🔍 Public APIs Search</h1>
-            <p class="subtitle">Search through hundreds of free public APIs</p>
+            <p class="subtitle">Discover hundreds of free public APIs, instantly</p>
         </header>
 
+        <!-- Stats bar -->
+        <div class="stats-bar" id="statsBar" style="display:none">
+            <div class="stat-card">
+                <span class="stat-value" id="statTotal">—</span>
+                <span class="stat-label">Total APIs</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-value" id="statCategories">—</span>
+                <span class="stat-label">Categories</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-value" id="statHttps">—</span>
+                <span class="stat-label">HTTPS Support</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-value" id="statNoAuth">—</span>
+                <span class="stat-label">No Auth Needed</span>
+            </div>
+        </div>
+
+        <!-- Search & Filters -->
         <div class="search-container">
             <div class="search-box">
-                <input 
-                    type="text" 
-                    class="search-input" 
-                    id="searchInput" 
-                    placeholder="Search by name or description..."
+                <input
+                    type="text"
+                    class="search-input"
+                    id="searchInput"
+                    placeholder="Search APIs by name, description, or category…"
+                    autocomplete="off"
+                    spellcheck="false"
                 >
+            </div>
+
+            <div class="filter-group">
                 <select id="authFilter">
                     <option value="">All Auth Types</option>
                     <option value="OAuth">OAuth</option>
                     <option value="apiKey">API Key</option>
-                    <option value="no auth">No Auth</option>
+                    <option value="No">No Auth</option>
                 </select>
                 <select id="httpsFilter">
                     <option value="">All HTTPS</option>
                     <option value="Yes">HTTPS Only</option>
                 </select>
+                <select id="corsFilter">
+                    <option value="">All CORS</option>
+                    <option value="Yes">CORS Supported</option>
+                </select>
+                <select id="sortSelect">
+                    <option value="">Default Order</option>
+                    <option value="name-asc">Name A → Z</option>
+                    <option value="name-desc">Name Z → A</option>
+                    <option value="category">By Category</option>
+                </select>
+                <button class="btn btn-fav" id="favFilterBtn">⭐ Favorites</button>
             </div>
 
-            <div class="stats">
-                <span id="resultsCount">0</span> APIs found
-                <span id="filterInfo"></span>
+            <div class="action-row">
+                <div class="stats-text">
+                    Showing <strong id="resultsCount">0</strong> APIs
+                    <span class="cache-badge" id="cacheBadge" style="display:none"></span>
+                </div>
+                <div class="action-buttons">
+                    <button class="btn btn-outline btn-sm" id="exportJSONBtn">↓ JSON</button>
+                    <button class="btn btn-outline btn-sm" id="exportCSVBtn">↓ CSV</button>
+                    <button class="btn btn-outline btn-sm" id="shareBtn">🔗 Share</button>
+                    <button class="btn btn-outline btn-sm" id="clearCacheBtn" style="display:none">↺ Refresh</button>
+                </div>
+            </div>
+
+            <!-- Category cloud -->
+            <div class="categories-section" id="categoriesSection" style="display:none">
+                <div class="categories-title">Browse by Category</div>
+                <div class="categories-list" id="categoriesContainer"></div>
             </div>
         </div>
 
         <div id="errorContainer"></div>
-        <div id="loadingContainer" class="loading">Loading APIs...</div>
+        <div id="loadingContainer" class="loading">
+            <div class="spinner"></div>
+            Fetching APIs…
+        </div>
         <div class="results-container" id="resultsContainer"></div>
     </div>
 
+    <div class="toast" id="toast"></div>
+
+    <footer>
+        Data sourced from <a href="https://github.com/public-apis/public-apis" target="_blank" rel="noopener">public-apis/public-apis</a>
+    </footer>
+
     <script>
+        const CACHE_KEY      = 'public_apis_v3';
+        const CACHE_TTL      = 6 * 60 * 60 * 1000; // 6 hours
+        const FAVORITES_KEY  = 'public_apis_favorites';
+
         class APISearchApp {
             constructor() {
-                this.apis = [];
-                this.filteredAPIs = [];
-                this.init();
+                this.apis          = [];
+                this.filteredAPIs  = [];
+                this.selectedCategory = '';
+                this.showFavOnly   = false;
+
+                this._loadDarkMode();
+                this._setupStaticListeners();
+                this._loadFromURL();
+                this._init();
             }
 
-            async init() {
+            // ── Bootstrap ───────────────────────────────────────────────────────────
+
+            async _init() {
                 try {
-                    await this.fetchAPIs();
-                    this.setupEventListeners();
-                    this.render();
-                } catch (error) {
-                    this.showError('Failed to load APIs: ' + error.message);
+                    await this._fetchAPIs();
+                    this._renderStats();
+                    this._renderCategoryCloud();
+                    document.getElementById('statsBar').style.display        = 'flex';
+                    document.getElementById('categoriesSection').style.display = 'block';
+                    document.getElementById('clearCacheBtn').style.display   = 'inline-flex';
+                    this._applyFilters();
+                    this._render();
+                } catch (err) {
+                    this._showError('Could not load API data: ' + err.message +
+                        '. Please check your connection and try again.');
                 }
             }
 
-            async fetchAPIs() {
-                // Fetch from the public-apis GitHub repository
-                const response = await fetch('https://raw.githubusercontent.com/public-apis/public-apis/master/README.md');
-                if (!response.ok) throw new Error('Failed to fetch APIs');
-                
-                const markdown = await response.text();
-                this.parseAPIs(markdown);
-            }
+            // ── Data fetching & parsing ─────────────────────────────────────────────
 
-            parseAPIs(markdown) {
-                // Parse the README markdown file to extract APIs
-                const lines = markdown.split('\n');
-                let currentCategory = '';
-                let inAPISection = false;
-
-                for (let i = 0; i < lines.length; i++) {
-                    const line = lines[i];
-
-                    // Detect main categories (## headers)
-                    if (line.startsWith('## ')) {
-                        currentCategory = line.replace('## ', '').trim();
-                        inAPISection = currentCategory !== 'Index' && currentCategory !== 'License';
-                        continue;
-                    }
-
-                    // Parse API entries (table rows)
-                    if (inAPISection && line.includes('|') && !line.includes('---')) {
-                        const api = this.parseAPIRow(line, currentCategory);
-                        if (api && api.name) {
-                            this.apis.push(api);
+            async _fetchAPIs() {
+                // Try cache first
+                try {
+                    const raw = localStorage.getItem(CACHE_KEY);
+                    if (raw) {
+                        const { data, timestamp } = JSON.parse(raw);
+                        if (Date.now() - timestamp < CACHE_TTL) {
+                            this.apis = data;
+                            this.filteredAPIs = [...data];
+                            const ageMin = Math.round((Date.now() - timestamp) / 60000);
+                            const badge = document.getElementById('cacheBadge');
+                            badge.textContent = `cached ${ageMin}m ago`;
+                            badge.style.display = 'inline-block';
+                            return;
                         }
                     }
-                }
+                } catch (_) { /* ignore */ }
 
-                this.filteredAPIs = [...this.apis];
-                console.log(`Loaded ${this.apis.length} APIs`);
+                const res = await fetch(
+                    'https://raw.githubusercontent.com/public-apis/public-apis/master/README.md'
+                );
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                this._parseMarkdown(await res.text());
+
+                try {
+                    localStorage.setItem(CACHE_KEY, JSON.stringify({
+                        data: this.apis,
+                        timestamp: Date.now()
+                    }));
+                } catch (_) { /* storage full or unavailable */ }
             }
 
-            parseAPIRow(line, category) {
-                // Parse markdown table row: | Name | Description | Auth | HTTPS | Link |
-                const cells = line.split('|').map(cell => cell.trim()).filter(cell => cell);
-                
+            _parseMarkdown(markdown) {
+                const lines = markdown.split('\n');
+                let category    = '';
+                let inAPISection = false;
+
+                for (const line of lines) {
+                    if (line.startsWith('## ')) {
+                        category = line.slice(3).trim();
+                        inAPISection = !['Index', 'License'].includes(category);
+                        continue;
+                    }
+                    if (inAPISection && line.includes('|') && !line.includes('---')) {
+                        const api = this._parseRow(line, category);
+                        if (api) this.apis.push(api);
+                    }
+                }
+                this.filteredAPIs = [...this.apis];
+            }
+
+            _parseRow(line, category) {
+                const cells = line.split('|').map(c => c.trim()).filter(Boolean);
                 if (cells.length < 4) return null;
 
+                // Skip header rows
+                if (cells[0].toLowerCase() === 'api') return null;
+
+                const name = this._extractName(cells[0]);
+                if (!name || name.toLowerCase() === 'api') return null;
+
                 return {
-                    name: cells[0],
-                    description: cells[1] || '',
-                    auth: cells[2] || 'No Auth',
-                    https: cells[3] || 'No',
-                    link: this.extractLink(cells[0]),
-                    category: category
+                    name,
+                    description : this._clean(cells[1] || ''),
+                    auth        : this._normalizeAuth(this._clean(cells[2] || '')),
+                    https       : this._clean(cells[3] || 'No'),
+                    cors        : cells.length > 4 ? this._clean(cells[4] || 'Unknown') : 'Unknown',
+                    link        : this._extractLink(cells[0]),
+                    category,
                 };
             }
 
-            extractLink(nameCell) {
-                // Extract URL from markdown link format: [Name](URL)
-                const match = nameCell.match(/\[([^\]]+)\]\(([^)]+)\)/);
-                return match ? match[2] : '';
+            _clean(text)        { return text.replace(/`/g, '').trim(); }
+            _extractName(cell)  { const m = cell.match(/\[([^\]]+)\]\([^)]+\)/); return m ? m[1].trim() : cell.trim(); }
+            _extractLink(cell)  { const m = cell.match(/\[([^\]]+)\]\(([^)]+)\)/); return m ? m[2].trim() : ''; }
+
+            _normalizeAuth(raw) {
+                const a = raw.toLowerCase();
+                if (!a || a === 'no') return 'No';
+                if (a === 'apikey')   return 'apiKey';
+                if (a === 'oauth')    return 'OAuth';
+                return raw;
             }
 
-            setupEventListeners() {
-                document.getElementById('searchInput').addEventListener('input', (e) => {
-                    this.search(e.target.value);
+            // ── Filtering & sorting ─────────────────────────────────────────────────
+
+            _applyFilters() {
+                const query     = document.getElementById('searchInput').value.toLowerCase();
+                const authVal   = document.getElementById('authFilter').value;
+                const httpsVal  = document.getElementById('httpsFilter').value;
+                const corsVal   = document.getElementById('corsFilter').value;
+                const sortVal   = document.getElementById('sortSelect').value;
+                const favs      = this.showFavOnly ? this._getFavs() : null;
+
+                let result = this.apis.filter(api => {
+                    if (query &&
+                        !api.name.toLowerCase().includes(query) &&
+                        !api.description.toLowerCase().includes(query) &&
+                        !api.category.toLowerCase().includes(query)) return false;
+                    if (authVal  && api.auth.toLowerCase()  !== authVal.toLowerCase())  return false;
+                    if (httpsVal && api.https.toLowerCase() !== httpsVal.toLowerCase()) return false;
+                    if (corsVal  && api.cors.toLowerCase()  !== corsVal.toLowerCase())  return false;
+                    if (this.selectedCategory && api.category !== this.selectedCategory) return false;
+                    if (favs && !favs.has(this._apiId(api))) return false;
+                    return true;
                 });
 
-                document.getElementById('authFilter').addEventListener('change', (e) => {
-                    this.filterByAuth(e.target.value);
-                });
+                if      (sortVal === 'name-asc')  result.sort((a, b) => a.name.localeCompare(b.name));
+                else if (sortVal === 'name-desc') result.sort((a, b) => b.name.localeCompare(a.name));
+                else if (sortVal === 'category')  result.sort((a, b) =>
+                    a.category.localeCompare(b.category) || a.name.localeCompare(b.name));
 
-                document.getElementById('httpsFilter').addEventListener('change', (e) => {
-                    this.filterByHttps(e.target.value);
-                });
+                this.filteredAPIs = result;
             }
 
-            search(query) {
-                const lowercaseQuery = query.toLowerCase();
-                this.filteredAPIs = this.apis.filter(api => 
-                    api.name.toLowerCase().includes(lowercaseQuery) ||
-                    api.description.toLowerCase().includes(lowercaseQuery) ||
-                    api.category.toLowerCase().includes(lowercaseQuery)
-                );
-                this.applyFilters();
-                this.render();
+            // ── Rendering ────────────────────────────────────────────────────────────
+
+            _renderStats() {
+                const total      = this.apis.length;
+                const categories = new Set(this.apis.map(a => a.category)).size;
+                const https      = this.apis.filter(a => a.https.toLowerCase() === 'yes').length;
+                const noAuth     = this.apis.filter(a => a.auth === 'No').length;
+                document.getElementById('statTotal').textContent      = total.toLocaleString();
+                document.getElementById('statCategories').textContent = categories;
+                document.getElementById('statHttps').textContent      = https.toLocaleString();
+                document.getElementById('statNoAuth').textContent     = noAuth.toLocaleString();
             }
 
-            filterByAuth(auth) {
-                this.applyFilters();
-                this.render();
+            _renderCategoryCloud() {
+                const counts = {};
+                this.apis.forEach(api => { counts[api.category] = (counts[api.category] || 0) + 1; });
+                const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]);
+                const container = document.getElementById('categoriesContainer');
+                container.innerHTML = sorted.map(([cat, n]) =>
+                    `<span class="category-tag${this.selectedCategory === cat ? ' active' : ''}" data-category="${this._escHtml(cat)}">`+
+                    `${this._escHtml(cat)} <span class="count">(${n})</span></span>`
+                ).join('');
             }
 
-            filterByHttps(https) {
-                this.applyFilters();
-                this.render();
-            }
-
-            applyFilters() {
-                const authFilter = document.getElementById('authFilter').value;
-                const httpsFilter = document.getElementById('httpsFilter').value;
-
-                let filtered = this.apis;
-
-                if (document.getElementById('searchInput').value) {
-                    const query = document.getElementById('searchInput').value.toLowerCase();
-                    filtered = filtered.filter(api => 
-                        api.name.toLowerCase().includes(query) ||
-                        api.description.toLowerCase().includes(query) ||
-                        api.category.toLowerCase().includes(query)
-                    );
-                }
-
-                if (authFilter) {
-                    filtered = filtered.filter(api => api.auth.toLowerCase().includes(authFilter.toLowerCase()));
-                }
-
-                if (httpsFilter === 'Yes') {
-                    filtered = filtered.filter(api => api.https.toLowerCase().includes('yes'));
-                }
-
-                this.filteredAPIs = filtered;
-            }
-
-            render() {
+            _render() {
+                const loading = document.getElementById('loadingContainer');
                 const container = document.getElementById('resultsContainer');
-                const loadingContainer = document.getElementById('loadingContainer');
-                
-                if (this.apis.length === 0) {
-                    loadingContainer.style.display = 'block';
-                    return;
-                }
 
-                loadingContainer.style.display = 'none';
+                if (this.apis.length === 0) { loading.style.display = 'block'; return; }
+                loading.style.display = 'none';
+                document.getElementById('resultsCount').textContent = this.filteredAPIs.length;
 
                 if (this.filteredAPIs.length === 0) {
-                    container.innerHTML = '<div class="no-results">No APIs found matching your filters.</div>';
-                    document.getElementById('resultsCount').textContent = '0';
+                    container.innerHTML =
+                        `<div class="no-results"><span class="emoji">🔍</span>` +
+                        `No APIs match your filters.<br><small>Try adjusting your search or clearing some filters.</small></div>`;
                     return;
                 }
 
-                container.innerHTML = this.filteredAPIs.map(api => this.createCardHTML(api)).join('');
-                document.getElementById('resultsCount').textContent = this.filteredAPIs.length;
+                const favs = this._getFavs();
+                container.innerHTML = this.filteredAPIs.map((api, i) => this._cardHTML(api, i, favs)).join('');
             }
 
-            createCardHTML(api) {
-                const httpsClass = api.https.toLowerCase().includes('yes') ? 'badge-https' : '';
-                const authClass = api.auth.includes('OAuth') ? 'badge-auth' : '';
+            _cardHTML(api, index, favs) {
+                const id    = this._apiId(api);
+                const isFav = favs.has(id);
+
+                const authBadge  = api.auth !== 'No'
+                    ? `<span class="badge badge-auth">${this._escHtml(api.auth)}</span>` : '';
+                const httpsBadge = api.https.toLowerCase() === 'yes'
+                    ? `<span class="badge badge-https">HTTPS ✓</span>` : '';
+                const corsBadge  = api.cors.toLowerCase() === 'yes'
+                    ? `<span class="badge badge-cors">CORS ✓</span>` : '';
 
                 return `
-                    <div class="api-card">
-                        <div class="api-name">${this.escapeHtml(api.name)}</div>
-                        <div class="api-description">${this.escapeHtml(api.description)}</div>
-                        <div class="api-meta">
-                            <span class="badge badge-category">${this.escapeHtml(api.category)}</span>
-                            ${api.auth ? `<span class="badge badge-auth">${this.escapeHtml(api.auth)}</span>` : ''}
-                            ${httpsClass ? `<span class="badge ${httpsClass}">HTTPS</span>` : ''}
-                        </div>
-                        ${api.link ? `<a href="${this.escapeHtml(api.link)}" target="_blank" class="api-link">${this.escapeHtml(api.link)}</a>` : ''}
+                <div class="api-card" data-index="${index}">
+                    <div class="card-header">
+                        <div class="api-name">${this._escHtml(api.name)}</div>
+                        <button class="fav-btn${isFav ? ' active' : ''}"
+                            title="${isFav ? 'Remove from favorites' : 'Add to favorites'}">★</button>
                     </div>
-                `;
+                    <div class="api-description">${this._escHtml(api.description) || '<em>No description available.</em>'}</div>
+                    <div class="api-meta">
+                        <span class="badge badge-category">${this._escHtml(api.category)}</span>
+                        ${authBadge}${httpsBadge}${corsBadge}
+                    </div>
+                    ${api.link ? `<a href="${this._escHtml(api.link)}" target="_blank" rel="noopener noreferrer" class="api-link">${this._escHtml(api.link)}</a>` : ''}
+                </div>`;
             }
 
-            escapeHtml(text) {
-                const map = {
-                    '&': '&amp;',
-                    '<': '&lt;',
-                    '>': '&gt;',
-                    '"': '&quot;',
-                    "'": '&#039;'
+            // ── Category filtering ────────────────────────────────────────────────
+
+            _filterByCategory(cat) {
+                this.selectedCategory = this.selectedCategory === cat ? '' : cat;
+                this._renderCategoryCloud();
+                this._applyFilters();
+                this._render();
+                this._updateURL();
+            }
+
+            // ── Favorites ────────────────────────────────────────────────────────
+
+            _apiId(api)  { return `${api.category}||${api.name}`; }
+
+            _getFavs() {
+                try { return new Set(JSON.parse(localStorage.getItem(FAVORITES_KEY) || '[]')); }
+                catch { return new Set(); }
+            }
+
+            _saveFavs(set) {
+                try { localStorage.setItem(FAVORITES_KEY, JSON.stringify([...set])); }
+                catch { /* ignore */ }
+            }
+
+            _toggleFav(index) {
+                const api = this.filteredAPIs[index];
+                if (!api) return;
+                const id   = this._apiId(api);
+                const favs = this._getFavs();
+                favs.has(id) ? favs.delete(id) : favs.add(id);
+                this._saveFavs(favs);
+
+                // Update just the button without full re-render
+                const card = document.querySelector(`.api-card[data-index="${index}"]`);
+                if (card) {
+                    const btn = card.querySelector('.fav-btn');
+                    btn.classList.toggle('active', favs.has(id));
+                    btn.title = favs.has(id) ? 'Remove from favorites' : 'Add to favorites';
+                }
+                if (this.showFavOnly) { this._applyFilters(); this._render(); }
+            }
+
+            _toggleFavFilter() {
+                this.showFavOnly = !this.showFavOnly;
+                document.getElementById('favFilterBtn').classList.toggle('active', this.showFavOnly);
+                this._applyFilters();
+                this._render();
+                this._updateURL();
+            }
+
+            // ── Export ───────────────────────────────────────────────────────────
+
+            exportJSON() {
+                if (!this.filteredAPIs.length) { this._toast('Nothing to export'); return; }
+                this._download(
+                    JSON.stringify(this.filteredAPIs, null, 2),
+                    'public-apis.json', 'application/json'
+                );
+                this._toast(`Exported ${this.filteredAPIs.length} APIs as JSON`);
+            }
+
+            exportCSV() {
+                if (!this.filteredAPIs.length) { this._toast('Nothing to export'); return; }
+                const cols = ['name','description','category','auth','https','cors','link'];
+                const header = cols.map(c => `"${c}"`).join(',');
+                const rows = this.filteredAPIs.map(api =>
+                    cols.map(c => `"${(api[c] || '').replace(/"/g, '""')}"`).join(',')
+                );
+                this._download([header, ...rows].join('\n'), 'public-apis.csv', 'text/csv');
+                this._toast(`Exported ${this.filteredAPIs.length} APIs as CSV`);
+            }
+
+            _download(content, filename, mime) {
+                const a   = Object.assign(document.createElement('a'), {
+                    href     : URL.createObjectURL(new Blob([content], { type: mime })),
+                    download : filename,
+                });
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(a.href);
+            }
+
+            // ── Share / URL params ───────────────────────────────────────────────
+
+            copyShareURL() {
+                this._updateURL();
+                if (navigator.clipboard) {
+                    navigator.clipboard.writeText(location.href)
+                        .then(() => this._toast('Link copied to clipboard!'))
+                        .catch(() => this._toast('URL: ' + location.href));
+                } else {
+                    this._toast('URL: ' + location.href);
+                }
+            }
+
+            _updateURL() {
+                const p = new URLSearchParams();
+                const q = document.getElementById('searchInput').value;
+                const a = document.getElementById('authFilter').value;
+                const h = document.getElementById('httpsFilter').value;
+                const c = document.getElementById('corsFilter').value;
+                const s = document.getElementById('sortSelect').value;
+                if (q) p.set('q', q);
+                if (a) p.set('auth', a);
+                if (h) p.set('https', h);
+                if (c) p.set('cors', c);
+                if (s) p.set('sort', s);
+                if (this.selectedCategory) p.set('category', this.selectedCategory);
+                if (this.showFavOnly)      p.set('favs', '1');
+                const qs = p.toString();
+                history.replaceState(null, '', location.pathname + (qs ? '?' + qs : ''));
+            }
+
+            _loadFromURL() {
+                const p = new URLSearchParams(location.search);
+                if (p.get('q'))        document.getElementById('searchInput').value   = p.get('q');
+                if (p.get('auth'))     document.getElementById('authFilter').value    = p.get('auth');
+                if (p.get('https'))    document.getElementById('httpsFilter').value   = p.get('https');
+                if (p.get('cors'))     document.getElementById('corsFilter').value    = p.get('cors');
+                if (p.get('sort'))     document.getElementById('sortSelect').value    = p.get('sort');
+                if (p.get('category')) this.selectedCategory = p.get('category');
+                if (p.get('favs') === '1') {
+                    this.showFavOnly = true;
+                    document.getElementById('favFilterBtn').classList.add('active');
+                }
+            }
+
+            // ── Dark mode ────────────────────────────────────────────────────────
+
+            _toggleDarkMode() {
+                const isDark = document.documentElement.dataset.theme === 'dark';
+                document.documentElement.dataset.theme = isDark ? '' : 'dark';
+                document.getElementById('darkModeBtn').textContent = isDark ? '🌙 Dark Mode' : '☀️ Light Mode';
+                try { localStorage.setItem('theme', isDark ? '' : 'dark'); } catch { /* ignore */ }
+            }
+
+            _loadDarkMode() {
+                try {
+                    const stored = localStorage.getItem('theme');
+                    const prefer = window.matchMedia?.('(prefers-color-scheme: dark)').matches ? 'dark' : '';
+                    const theme  = stored !== null ? stored : prefer;
+                    if (theme === 'dark') {
+                        document.documentElement.dataset.theme = 'dark';
+                        document.getElementById('darkModeBtn').textContent = '☀️ Light Mode';
+                    }
+                } catch { /* ignore */ }
+            }
+
+            // ── Cache clear ──────────────────────────────────────────────────────
+
+            _clearCache() {
+                try { localStorage.removeItem(CACHE_KEY); } catch { /* ignore */ }
+                document.getElementById('cacheBadge').style.display = 'none';
+                document.getElementById('loadingContainer').style.display = 'block';
+                document.getElementById('resultsContainer').innerHTML = '';
+                document.getElementById('statsBar').style.display    = 'none';
+                document.getElementById('categoriesSection').style.display = 'none';
+                this.apis = []; this.filteredAPIs = [];
+                this._init();
+                this._toast('Refreshing API data…');
+            }
+
+            // ── Event listeners ─────────────────────────────────────────────────
+
+            _setupStaticListeners() {
+                const debounce = (fn, ms) => {
+                    let t; return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), ms); };
                 };
-                return text.replace(/[&<>"']/g, m => map[m]);
+
+                document.getElementById('darkModeBtn').addEventListener('click', () => this._toggleDarkMode());
+                document.getElementById('favFilterBtn').addEventListener('click', () => this._toggleFavFilter());
+                document.getElementById('exportJSONBtn').addEventListener('click', () => this.exportJSON());
+                document.getElementById('exportCSVBtn').addEventListener('click', () => this.exportCSV());
+                document.getElementById('shareBtn').addEventListener('click', () => this.copyShareURL());
+                document.getElementById('clearCacheBtn').addEventListener('click', () => this._clearCache());
+
+                document.getElementById('searchInput').addEventListener('input', debounce(() => {
+                    this._applyFilters(); this._render(); this._updateURL();
+                }, 200));
+
+                ['authFilter', 'httpsFilter', 'corsFilter', 'sortSelect'].forEach(id => {
+                    document.getElementById(id).addEventListener('change', () => {
+                        this._applyFilters(); this._render(); this._updateURL();
+                    });
+                });
+
+                // Delegate: favorite buttons
+                document.getElementById('resultsContainer').addEventListener('click', e => {
+                    const btn = e.target.closest('.fav-btn');
+                    if (btn) {
+                        const idx = parseInt(btn.closest('.api-card').dataset.index, 10);
+                        if (!isNaN(idx)) this._toggleFav(idx);
+                    }
+                });
+
+                // Delegate: category tags
+                document.getElementById('categoriesContainer').addEventListener('click', e => {
+                    const tag = e.target.closest('.category-tag');
+                    if (tag) this._filterByCategory(tag.dataset.category);
+                });
             }
 
-            showError(message) {
-                const container = document.getElementById('errorContainer');
-                container.innerHTML = `<div class="error">${message}</div>`;
+            // ── Utilities ───────────────────────────────────────────────────────
+
+            _escHtml(s) {
+                return String(s).replace(/[&<>"']/g, c => (
+                    {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]
+                ));
+            }
+
+            _toast(msg) {
+                const el = document.getElementById('toast');
+                el.textContent = msg;
+                el.classList.add('show');
+                clearTimeout(this._toastTimer);
+                this._toastTimer = setTimeout(() => el.classList.remove('show'), 3000);
+            }
+
+            _showError(msg) {
+                document.getElementById('errorContainer').innerHTML =
+                    `<div class="error-box">⚠️ <span>${msg}</span></div>`;
                 document.getElementById('loadingContainer').style.display = 'none';
             }
         }
 
-        // Initialize the app when DOM is ready
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', () => {
-                new APISearchApp();
-            });
-        } else {
-            new APISearchApp();
-        }
+        // Boot
+        const boot = () => { window.app = new APISearchApp(); };
+        document.readyState === 'loading'
+            ? document.addEventListener('DOMContentLoaded', boot)
+            : boot();
     </script>
 </body>
 </html>

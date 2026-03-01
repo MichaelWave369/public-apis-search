@@ -9,6 +9,7 @@
   // Config / constants
   // ---------------------------------------------------------------------------
   const CONFIG = {
+    appVersion: '1.0.0',
     dataUrl: 'https://raw.githubusercontent.com/public-apis/public-apis/master/README.md',
     cacheKey: 'public_apis_v2_cache',
     cacheTtlMs: 6 * 60 * 60 * 1000,
@@ -58,7 +59,28 @@
     if (!t.includes('|')) return null;
     if (/^\|?\s*:?-{3,}:?\s*(\|\s*:?-{3,}:?\s*)+\|?$/.test(t)) return null;
 
-    const cells = t.replace(/^\|/, '').replace(/\|$/, '').split('|').map((part) => safeText(part));
+    const body = t.replace(/^\|/, '').replace(/\|$/, '');
+    const cells = [];
+    let current = '';
+    let escaped = false;
+    for (const ch of body) {
+      if (escaped) {
+        current += ch;
+        escaped = false;
+        continue;
+      }
+      if (ch === '\\') {
+        escaped = true;
+        continue;
+      }
+      if (ch === '|') {
+        cells.push(safeText(current));
+        current = '';
+      } else {
+        current += ch;
+      }
+    }
+    cells.push(safeText(current));
     if (cells.length < 4) return null;
     return cells;
   }
@@ -104,7 +126,7 @@
     const skipSections = new Set(['index', 'contributing', 'license']);
 
     for (const line of lines) {
-      const heading = line.match(/^##\s+(.+)$/);
+      const heading = line.match(/^##+\s+(.+)$/);
       if (heading) {
         category = safeText(heading[1]);
         continue;
@@ -191,7 +213,7 @@
 
   function toCSV(apis) {
     const headers = ['Name', 'Description', 'Auth', 'HTTPS', 'CORS', 'Category', 'Link'];
-    const rows = (apis || []).map((api) => [api.name, api.description, api.auth, api.https, api.cors, api.category, api.link]);
+    const rows = (apis || []).map((api) => [api.name, api.description, api.auth, api.https, api.cors, api.category, api.link || '']);
     return [headers.map(csvEscape).join(','), ...rows.map((r) => r.map(csvEscape).join(','))].join('\n');
   }
 
@@ -638,7 +660,12 @@
         await navigator.clipboard.writeText(url);
         this.toast('Share URL copied');
       } catch {
-        this.toast('Copy failed. Use the address bar URL.');
+        try {
+          window.prompt('Copy this URL:', url);
+          this.toast('Copy the URL from the prompt');
+        } catch {
+          this.toast('Copy failed. Use the address bar URL.');
+        }
       }
     }
 

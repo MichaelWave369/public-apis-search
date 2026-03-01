@@ -1,42 +1,43 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Public APIs Search</title>
-  <meta name="description" content="Search and filter free public APIs from public-apis/public-apis." />
+  <title>Public APIs Search v2</title>
+  <meta name="description" content="A lightweight static web app to search and browse public APIs." />
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
   <div class="container">
-    <header class="page-header">
-      <button class="header-btn" id="themeBtn" type="button" aria-label="Toggle dark mode">🌙 Dark mode</button>
-      <h1>Public APIs Search</h1>
-      <p class="subtitle">Discover and filter free public APIs</p>
+    <header class="header">
+      <div>
+        <h1>Public APIs Search</h1>
+        <p class="subtitle">Fast, static, and beginner-friendly API discovery</p>
+      </div>
+      <div class="header-actions">
+        <button id="randomBtn" class="btn btn-outline" type="button">🎲 Surprise me</button>
+        <button id="themeBtn" class="btn btn-outline" type="button" aria-label="Toggle color theme">🌙 Dark mode</button>
+      </div>
     </header>
 
-    <section class="stats-bar" id="statsBar" aria-label="Dataset statistics" hidden>
-      <article class="stat-card"><span id="statTotal" class="stat-value">0</span><span class="stat-label">Total APIs</span></article>
-      <article class="stat-card"><span id="statCategories" class="stat-value">0</span><span class="stat-label">Categories</span></article>
-      <article class="stat-card"><span id="statHttps" class="stat-value">0</span><span class="stat-label">HTTPS</span></article>
-      <article class="stat-card"><span id="statNoAuth" class="stat-value">0</span><span class="stat-label">No Auth</span></article>
+    <section id="statsBar" class="stats" hidden aria-label="Dataset statistics">
+      <article class="stat"><span id="statTotal" class="stat-value">0</span><span class="stat-label">APIs</span></article>
+      <article class="stat"><span id="statCategories" class="stat-value">0</span><span class="stat-label">Categories</span></article>
+      <article class="stat"><span id="statHttps" class="stat-value">0</span><span class="stat-label">HTTPS</span></article>
+      <article class="stat"><span id="statNoAuth" class="stat-value">0</span><span class="stat-label">No Auth</span></article>
     </section>
 
     <section class="panel" aria-label="Search and filters">
-      <label for="searchInput" class="sr-only">Search APIs</label>
-      <input
-        id="searchInput"
-        class="search-input"
-        type="search"
-        placeholder="Search by name, description, or category"
-        autocomplete="off"
-        spellcheck="false"
-      />
+      <div class="search-row">
+        <label class="sr-only" for="searchInput">Search APIs</label>
+        <input id="searchInput" type="search" class="search-input" placeholder="Search by API, description, or category" autocomplete="off" spellcheck="false" />
+        <button id="clearSearchBtn" class="btn btn-outline" type="button" hidden>Clear</button>
+      </div>
 
-      <div class="filter-group" role="group" aria-label="Filters">
+      <div class="filter-row">
         <label class="sr-only" for="authFilter">Authentication filter</label>
         <select id="authFilter">
-          <option value="">All Auth Types</option>
+          <option value="">All Auth</option>
           <option value="OAuth">OAuth</option>
           <option value="apiKey">API Key</option>
           <option value="No">No Auth</option>
@@ -45,66 +46,98 @@
         <label class="sr-only" for="httpsFilter">HTTPS filter</label>
         <select id="httpsFilter">
           <option value="">All HTTPS</option>
-          <option value="Yes">HTTPS Only</option>
+          <option value="Yes">HTTPS only</option>
+          <option value="No">No HTTPS</option>
         </select>
 
         <label class="sr-only" for="corsFilter">CORS filter</label>
         <select id="corsFilter">
           <option value="">All CORS</option>
-          <option value="Yes">CORS Supported</option>
+          <option value="Yes">CORS Yes</option>
+          <option value="No">CORS No</option>
+          <option value="Unknown">CORS Unknown</option>
         </select>
 
-        <label class="sr-only" for="sortSelect">Sort APIs</label>
+        <label class="sr-only" for="sortSelect">Sort results</label>
         <select id="sortSelect">
-          <option value="">Default Order</option>
+          <option value="relevance">Best Match</option>
           <option value="name-asc">Name A → Z</option>
           <option value="name-desc">Name Z → A</option>
-          <option value="category">By Category</option>
+          <option value="category">Category</option>
         </select>
 
-        <button class="btn btn-fav" id="favFilterBtn" type="button" aria-pressed="false">⭐ Favorites</button>
+        <button id="favOnlyBtn" class="btn btn-outline" type="button" aria-pressed="false">⭐ Favorites</button>
+        <button id="compactBtn" class="btn btn-outline" type="button" aria-pressed="false">☰ Compact</button>
+        <button id="clearAllBtn" class="btn btn-outline" type="button">Clear all</button>
       </div>
 
-      <div class="action-row">
-        <p class="stats-text">
+      <div id="activeChips" class="chips" aria-label="Active filters"></div>
+
+      <div class="meta-row">
+        <p class="results-meta">
           Showing <strong id="resultsCount">0</strong> APIs
-          <span class="cache-badge" id="cacheBadge" hidden></span>
+          <span id="cacheStatus" class="status-badge" hidden></span>
+          <span id="lastUpdated" class="status-badge" hidden></span>
         </p>
-        <div class="action-buttons">
-          <button class="btn btn-outline btn-sm" id="exportJSONBtn" type="button">↓ JSON</button>
-          <button class="btn btn-outline btn-sm" id="exportCSVBtn" type="button">↓ CSV</button>
-          <button class="btn btn-outline btn-sm" id="shareBtn" type="button">🔗 Share</button>
-          <button class="btn btn-outline btn-sm" id="refreshBtn" type="button" hidden>↺ Refresh</button>
+        <div class="button-group">
+          <button id="exportJSONBtn" class="btn btn-outline" type="button">↓ JSON</button>
+          <button id="exportCSVBtn" class="btn btn-outline" type="button">↓ CSV</button>
+          <button id="shareBtn" class="btn btn-outline" type="button">🔗 Share</button>
+          <button id="refreshBtn" class="btn btn-outline" type="button" hidden>↻ Refresh</button>
         </div>
       </div>
 
-      <section class="categories-section" id="categoriesSection" hidden>
-        <h2 class="categories-title">Browse by Category</h2>
-        <div class="categories-list" id="categoriesContainer" role="list"></div>
-      </section>
+      <div id="popularCategories" class="popular" hidden>
+        <p class="section-label">Popular categories</p>
+        <div id="popularCategoryList" class="tag-list" role="list"></div>
+      </div>
+
+      <div id="allCategories" class="categories" hidden>
+        <p class="section-label">All categories</p>
+        <div id="categoryList" class="tag-list" role="list"></div>
+      </div>
     </section>
 
     <section id="statusRegion" aria-live="polite">
       <div id="errorContainer"></div>
       <div id="loadingContainer" class="loading" hidden>
-        <div class="spinner" aria-hidden="true"></div>
-        <p>Fetching APIs…</p>
+        <div class="skeleton-grid" id="skeletonGrid"></div>
       </div>
     </section>
 
-    <main class="results-container" id="resultsContainer" aria-live="polite"></main>
+    <main id="resultsContainer" class="results" aria-live="polite"></main>
   </div>
 
-  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <dialog id="detailDialog" class="detail-dialog" aria-labelledby="detailTitle">
+    <article class="detail-card">
+      <header class="detail-header">
+        <h2 id="detailTitle"></h2>
+        <button id="detailCloseBtn" class="btn btn-outline" type="button" aria-label="Close detail view">Close</button>
+      </header>
+      <p id="detailDescription"></p>
+      <dl class="detail-grid">
+        <dt>Auth</dt><dd id="detailAuth"></dd>
+        <dt>HTTPS</dt><dd id="detailHttps"></dd>
+        <dt>CORS</dt><dd id="detailCors"></dd>
+        <dt>Category</dt><dd id="detailCategory"></dd>
+      </dl>
+      <div class="button-group">
+        <a id="detailLink" class="btn" href="#" target="_blank" rel="noopener noreferrer">Open API</a>
+        <button id="detailCopyBtn" class="btn btn-outline" type="button">Copy link</button>
+        <button id="detailFavoriteBtn" class="btn btn-outline" type="button">Toggle favorite</button>
+        <a id="detailSourceBtn" class="btn btn-outline" href="https://github.com/public-apis/public-apis" target="_blank" rel="noopener noreferrer">View source list</a>
+      </div>
+    </article>
+  </dialog>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
   <footer>
-    Data sourced from
+    Data source:
     <a href="https://github.com/public-apis/public-apis" target="_blank" rel="noopener noreferrer">public-apis/public-apis</a>
   </footer>
 
-  <noscript>
-    <p class="noscript">This app requires JavaScript enabled in your browser.</p>
-  </noscript>
+  <noscript><p class="noscript">This app needs JavaScript enabled.</p></noscript>
 
   <script src="app.js"></script>
 </body>

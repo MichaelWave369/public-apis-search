@@ -1,119 +1,87 @@
-# Public APIs Search App
+# Public APIs Search
 
-A fast, searchable web application for discovering and filtering free public APIs from the [public-apis/public-apis](https://github.com/public-apis/public-apis) GitHub repository.
+A polished, dependency-free static web app for discovering public APIs from [public-apis/public-apis](https://github.com/public-apis/public-apis).
 
 ## Features
 
-- 🔍 **Real-time Search** — Instantly search across hundreds of APIs by name, description, or category
-- 🔐 **Filter by Authentication** — Find APIs with OAuth, API Key, or no authentication requirements
-- 🔒 **HTTPS Filter** — Filter for APIs that support HTTPS
-- 🌐 **CORS Filter** — Show only APIs with CORS support
-- 🗂️ **Category Cloud** — Visual tag cloud with API counts; click any category to filter instantly
-- 📊 **Statistics Dashboard** — Total APIs, number of categories, HTTPS count, and no-auth count at a glance
-- ↕️ **Sort Options** — Sort results A→Z, Z→A, or by category
-- ⭐ **Favorites** — Star APIs and filter to show saved favorites (persisted in localStorage)
-- 💾 **Smart Caching** — API data is cached in localStorage for 6 hours, with a manual refresh button
-- 📤 **Export** — Download filtered results as JSON or CSV
-- 🔗 **Shareable URLs** — All active filters are reflected in the URL so you can share exact views
-- 🌙 **Dark Mode** — Toggle between light and dark themes (respects system preference)
-- 📱 **Responsive Design** — Works great on desktop, tablet, and mobile devices
-- ⚡ **Fast & Lightweight** — No dependencies, pure vanilla JavaScript, single HTML file
+- Real-time search across API name, description, and category
+- Filters for Auth, HTTPS, CORS, and Favorites
+- Category browsing with quick toggle chips
+- Sort by name (A→Z / Z→A) or category
+- Favorites saved in `localStorage`
+- Export current results to JSON or CSV
+- Shareable URL state (query + filters + sort + category + favorites mode)
+- Theme toggle (light/dark) with persistence
+- Data caching in `localStorage` (6-hour TTL)
+- Friendly loading / empty / error states with retry
 
-## Usage
+## Project Structure
 
-Open `index.html` in your web browser, or deploy to any static host (GitHub Pages, Netlify, etc.):
-
+```text
+public-apis-search/
+├── index.html        # App markup and accessibility-friendly semantics
+├── styles.css        # Theme + layout + responsive styles
+├── app.js            # App logic + utility functions
+├── tests/
+│   └── utils.test.js # Lightweight Node tests for core utilities
+└── README.md
 ```
-https://yourusername.github.io/public-apis-search/
-```
-
-### Local Development
-
-1. Clone this repository
-2. Open `index.html` in your browser
-3. No build process or dependencies required!
 
 ## How It Works
 
-1. On first load the app fetches the latest README from [public-apis/public-apis](https://github.com/public-apis/public-apis)
-2. The markdown table is parsed to extract API name, description, auth type, HTTPS support, CORS support, category, and link
-3. Parsed data is cached in `localStorage` for 6 hours to speed up repeat visits
-4. Search and all filters are applied client-side in real-time using JavaScript
+1. `app.js` tries to load fresh cached data from `localStorage`.
+2. If cache is stale/missing, it fetches the upstream README markdown.
+3. The parser extracts API rows from markdown tables under `##` category headings.
+4. Parsed records are normalized (auth values, missing fields), deduplicated, then cached.
+5. Rendering is fully client-side: filters/sorting are applied in memory and synced to URL params.
 
-## Filters & Controls
+## Reliability Notes
 
-| Control | Description |
-|---|---|
-| **Search box** | Full-text search across name, description, and category |
-| **Auth Type** | Filter by OAuth, API Key, or No Auth |
-| **HTTPS** | Show only HTTPS-enabled APIs |
-| **CORS** | Show only CORS-supported APIs |
-| **Sort** | Order results by name (A→Z / Z→A) or by category |
-| **⭐ Favorites** | Toggle to show only starred APIs |
-| **Category tags** | Click to filter by a specific category; click again to clear |
-| **↓ JSON / ↓ CSV** | Export the currently visible results |
-| **🔗 Share** | Copies a URL encoding all current filters to the clipboard |
-| **↺ Refresh** | Clears the cache and re-fetches fresh data |
-| **🌙 Dark Mode** | Toggles dark/light theme |
+- Parser is intentionally defensive and skips malformed rows instead of crashing.
+- If network fetch fails and stale cache exists, stale data is shown with a badge.
+- If parsing fails entirely, users see an in-app error with a retry action.
+- CSV export always quotes and escapes values to prevent broken files.
+- Favorites are deduplicated using a stable API id key.
 
-## Deployment to GitHub Pages
+## Development
 
-1. Fork or clone this repository
-2. Push the files to your `main` branch
-3. Go to repository **Settings → Pages**
-4. Select **Deploy from a branch** and choose `main`
-5. Your app will be live at `https://yourusername.github.io/public-apis-search/`
+No build step and no dependencies are required.
 
-## File Structure
+### Run locally
 
-```
-public-apis-search/
-├── index.html   # Complete app — HTML + CSS + JavaScript (single file)
-├── README.md    # This file
-├── LICENSE      # MIT License
-└── .gitignore   # Git ignore rules
+Open `index.html` directly in your browser, or serve with a tiny static server:
+
+```bash
+python3 -m http.server 4173
 ```
 
-## Browser Compatibility
+Then open: `http://localhost:4173`
 
-Works on all modern browsers:
-- Chrome / Edge 90+
-- Firefox 88+
-- Safari 14+
-- Mobile browsers (iOS Safari, Chrome Mobile)
+### Run tests
 
-## Performance
+Requires Node.js 18+.
 
-- **First load** — ~1–3 seconds (fetches from GitHub on first visit)
-- **Repeat visits** — Instant (served from localStorage cache, 6-hour TTL)
-- **Search / filter** — Instant (<10 ms)
-- **No external dependencies** — single ~18 KB HTML file
-
-## Data Source
-
-Data is pulled from:
-```
-https://raw.githubusercontent.com/public-apis/public-apis/master/README.md
+```bash
+node --test tests/utils.test.js
 ```
 
-Use the **↺ Refresh** button to force a fresh fetch at any time.
+## Deployment (GitHub Pages)
 
-## Contributing
+1. Push this repository to GitHub.
+2. Go to **Settings → Pages**.
+3. Set source to **Deploy from a branch** and choose your default branch.
+4. Save.
 
-1. Fork the repository
-2. Make your changes to `index.html`
-3. Test locally in a browser
-4. Submit a pull request
+Your app will be available at:
+
+```text
+https://<your-username>.github.io/public-apis-search/
+```
+
+## Upstream Data Limitation
+
+This app depends on the markdown format used by `public-apis/public-apis` README tables. If upstream structure changes significantly, parsing may miss rows until parser rules are updated.
 
 ## License
 
-MIT — see [LICENSE](LICENSE) for details.
-
-## Related Projects
-
-- [public-apis/public-apis](https://github.com/public-apis/public-apis) — The original API collection
-- [RapidAPI](https://rapidapi.com/) — API marketplace
-
----
-
-Made with ♥ for developers. Happy building!
+MIT (see [LICENSE](LICENSE)).

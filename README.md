@@ -4,7 +4,7 @@ Public APIs Search is a fast, static, zero-dependency web app for discovering pu
 
 **Live Demo:** https://michaelwave369.github.io/public-apis-search/
 
-## Features
+## v2 Highlights
 
 - 🔎 Real-time search with relevance ranking (name > category > description)
 - 🏷️ Auth / HTTPS / CORS filtering
